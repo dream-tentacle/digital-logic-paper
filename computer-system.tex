@@ -1,8 +1,26 @@
 \documentclass[12pt, a4paper, oneside]{article}
-\usepackage{caption, hyperref}
+\usepackage{caption, hyperref, listings}
+\usepackage{graphicx}
 % \usepackage[hyphens]{url}
+\lstdefinestyle{mystyle}{
+    basicstyle=\ttfamily,
+    breaklines=true,
+    showstringspaces=false,
+    commentstyle=\color{gray},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{gray},
+    numbers=left,
+    frame=single,
+    rulecolor=\color{black},
+    backgroundcolor=\color{lightgray},
+    xleftmargin=15pt,
+    xrightmargin=5pt,
+    morestring=[b]",
+    morecomment=[l]{//},
+}
 
-\title{\textbf{A RISC-V computer system design}}
+\title{\textbf{A RISC-V computer system design} \\ \large{\textit{Latest version available at:} \url{http://www.yourhomepage.com}}}
+
 \author{Xiong Juncheng}
 \date{\today}
 \linespread{1.5}
@@ -49,7 +67,6 @@ RISC-V is an open-source instruction set architecture (ISA) based on reduced ins
 The CPU uses byte addressing, and access all other devices through memory-mapped I/O. The memory address is 32 bits wide, and the first 12 bits are used to select the device. The address map is shown in Table \ref{tab:address-map}.
 \begin{table}[h]
     \centering
-    \captionof{table}{Address Map}
     \begin{tabular}{|c|c|c|}
         \hline
         Address range           & Device             \\
@@ -62,20 +79,53 @@ The CPU uses byte addressing, and access all other devices through memory-mapped
         \hline
         0x00300000, 0x00300004  & Keyboard           \\
         \hline
-        0x00400000, 0x00400004  & Timer              \\
+        0x00400000, 0x00400004  & LED                \\
+        \hline
+        0x00500000, 0x00500004  & timer              \\
+        \hline
+        0x00600000              & deprecated         \\
+        \hline
+        0x00700000              & deprecated         \\
+        \hline
+        0x00800000, 0x00800004  & PWM audio output   \\
         \hline
     \end{tabular}
+    \captionof{table}{Address Map}
     \label{tab:address-map}
 \end{table}
+
 \subsection{Instruction and data memory}
 The instruction and data memory are both implemented using block RAM (BRAM). The instruction memory is read-only, and the data memory is read-write. Both of them are 1MB in size. The instruction address must be aligned to 4 bytes, while the data address can be any byte address.
-\subsection{VGA screen}
-The screen is read-write. The resolution is 640x480, and the color depth is 12 bits. Because the system is totally based on a terminal and the games are using characters as the basic unit, the screen is divided into 80x30 characters of 8x16 pixels. This allows us only store 80x30 characters' ascii code. To accelerate the screen access speed, the screen is implemented with an one-dimensional array instead of a two-dimensional array. Considering the line and column size, 11-7 bits of the address are used to represent the line number, and 6-0 bits are used to represent the column number($2^5=32,2^7=128$).
-\subsection{Keyboard}
+\subsection{VGA screen (Write-only)}
+The resolution is 640x480, and the color depth is 12 bits. Because the system is totally based on a terminal and the games are using characters as the basic unit, the screen is divided into 80x30 characters of 8x16 pixels. This allows us only store 80x30 characters' ascii code.
 
-\subsection{PWM audio output}
+To accelerate the screen access speed, the screen is implemented with an one-dimensional array instead of a two-dimensional array. Considering the line and column size, 11-7 bits of the address are used to represent the line number, and 6-0 bits are used to represent the column number($2^5=32,2^7=128$). The screen has a base address of 0x00200000, and is accessed with 0x00200000 + offset.
+\subsection{Keyboard (Read-only)}
+The input signals of the keyboard are PS2\_CLK and PS2\_DATA. With a keyboard signal processor, a byte of scan code can be generated when a key is pressed. The scan code is then stored in a circular buffer of 16 bytes. The buffer provides the CPU with a "new\_key" signal, which is high when the buffer is not empty. The CPU can read "new\_key" through the address 0x00300000. When the CPU reads the address 0x00300004, the buffer will pop a byte of scan code.
 
-\subsection{Timer}
+The driver of the keyboard is implemented in the software part. Basically, the driver is a finite state machine (Figure \ref{fig:image1}), which can be divided into three states: KEY\_DOWN, KEY\_UP, LONG\_KEY\_DOWN, and LONG\_KEY\_UP. The "LONG\_" prefix in states refers to the two-bytes scan code which mainly start with 0xE0. The break code of a key is 0xF0 succeeded by its make code, thus the KEY\_UP and LONG\_KEY\_UP states are used to detect the break code.
+
+The driver is implemented with a C function, which has only one state change every time it is called. There are three global values, "key\_ready", "two\_byte\_code" and "key\_up", which are signals for applications and are set according to the state. When the state machine finds that it ends a key press, it sets "key\_ready" to 1, and returns (the lowest byte of) the scan code. Otherwise, it returns 0.
+
+The other two-byte scan codes are not used in this project, so we just ignore them.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=8cm]{image1.png}
+    \captionof{figure}{Keyboard driver state machine}
+    \par 1: KEY\_DOWN, 2: LONG\_KEY\_DOWN, \\ 3: KEY\_UP, 4: LONG\_KEY\_UP
+    \label{fig:image1}
+
+\end{figure}
+
+
+\subsection{PWM audio output (Write-only)}
+The audio pitch is based on the frequency of the PWM signal. There is a count value and a max value. Thw PWM signal is high when the count value is less than half of the max value, and low otherwise. The count value is increased by 1 every clock cycle and set back to 0 when it exceeds the max value. Thus, the pitch can be adjusted by changing the max value.
+
+The audio has two memory addresses, 0x00800000 and 0x00800004. The first address is used to set the max value, and the second address is used to turn on/off the audio.
+
+\subsection{Timer (Read-only)}
+There are two memory addresses, 0x00500000 and 0x00500004, corresponding to the millisecond counter and the second counter. Two extra counters are used for the timer. The first is a clock cycle counter that is set back to 0 when it exceeds $10^5$, and then both the second counter and the millisecond counter add 1. The second counter is set back to 0 when it exceeds 1000, and then the second counter adds 1. This implementation of four counters can largely reduce the complexity of the calculation because it doesn't use any division or multiplication.
 
 \section{Software}
 \subsection{Terminal}
