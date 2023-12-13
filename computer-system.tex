@@ -1,39 +1,57 @@
-\documentclass[12pt, a4paper, oneside]{article}
-\usepackage{caption, hyperref, listings}
-\usepackage{graphicx}
-% \usepackage[hyphens]{url}
-\lstdefinestyle{mystyle}{
-    basicstyle=\ttfamily,
-    breaklines=true,
-    showstringspaces=false,
-    commentstyle=\color{gray},
-    keywordstyle=\color{blue},
-    numberstyle=\tiny\color{gray},
-    numbers=left,
-    frame=single,
-    rulecolor=\color{black},
-    backgroundcolor=\color{lightgray},
-    xleftmargin=15pt,
-    xrightmargin=5pt,
-    morestring=[b]",
-    morecomment=[l]{//},
-}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% University/School Laboratory Report
+% LaTeX Template
+% Version 4.0 (March 21, 2022)
+%
+% This template originates from:
+% https://www.LaTeXTemplates.com
+%
+% Authors:
+% Vel (vel@latextemplates.com)
+% Linux and Unix Users Group at Virginia Tech Wiki
+%
+% License:
+% CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\title{\textbf{A RISC-V computer system design}\thanks{\textit{Latest version available at:} \url{https://github.com/dream-tentacle/digital-logic-paper}}}
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
 
-\author{Xiong Juncheng}
-\date{\today}
-\linespread{1.5}
+\documentclass[
+	a4paper, % Paper size, specify a4paper (A4) or letterpaper (US letter)
+	11pt, % Default font size, specify 10pt, 11pt or 12pt
+]{CSUniSchoolLabReport}
+\usepackage{caption, hyperref, listings, graphics, geometry}
+% \addbibresource{sample.bib} % Bibliography file (located in the same folder as the template)
+\geometry{left = 2.5cm, right = 2.5cm, top = 2.5cm, bottom = 2.5cm}
+%----------------------------------------------------------------------------------------
+%	REPORT INFORMATION
+%----------------------------------------------------------------------------------------
 
+\title{A RISC-V computer system design} % Report title
 
-\renewcommand{\abstractname}{\Large\textbf{Abstract}}
+\author{Jun-Cheng Xiong} % Author name(s), add additional authors like: '\& James \textsc{Smith}'
+
+\date{\today} % Date of the report
+
+%----------------------------------------------------------------------------------------
+
+\newdimen\Lmargin
+\newdimen\Rmargin
+\Lmargin=1in \advance\Lmargin by\hoffset \advance\Lmargin by\oddsidemargin
+\Rmargin=\paperwidth \advance\Rmargin by-\Lmargin \advance\Rmargin by-\textwidth
+\ifdim\Lmargin>\Rmargin \Rmargin=\Lmargin \fi
+\def\Scentering{\leftskip=0pt plus 1fil minus \Rmargin
+                \rightskip=\leftskip}
+
+%----------------------------------------------------------------------------------------
 
 \begin{document}
-\maketitle
 
-\setcounter{page}{0}
-\maketitle
-\thispagestyle{empty}
+\maketitle % Insert the title, author and date using the information specified above
+
 
 \begin{abstract}
     In this project, I designed a simple RISC-V computer system on FPGA. The FPAG board is Digilent Nexys A7-100T. The compter system is composed of: a CPU, a data memory, an instruction memory, a vga screen, a keyboard, and a PWM audio output. The CPU is a 5-stage pipeline processor, which can execute 32-bit RISC-V instructions. The system interface is a terminal, which can execute basic commands and run two software - Snake and Piano.
@@ -42,9 +60,10 @@
 \end{abstract}
 \newpage
 
+\thispagestyle{empty}
 \tableofcontents
-\newpage
 
+\newpage
 \setcounter{page}{1}
 \section{Introduction}
 \subsection{Overall introduction}
@@ -61,12 +80,18 @@ RISC-V is an open-source instruction set architecture (ISA) based on reduced ins
 \section{Hardware}
 
 \subsection{5-stage pipeline CPU}
+\begin{figure}[htbp]
+    \Scentering
+    \includegraphics[width=.9\paperwidth]{image2.png}
+    \caption{}
+    \label{fig:image2}
+\end{figure}
 
 \subsection{Memory management}
 
 The CPU uses byte addressing, and access all other devices through memory-mapped I/O. The memory address is 32 bits wide, and the first 12 bits are used to select the device. The address map is shown in Table \ref{tab:address-map}.
 \begin{table}[h]
-    \centering
+    \Scentering
     \begin{tabular}{|c|c|c|}
         \hline
         Address range           & Device             \\
@@ -103,7 +128,7 @@ To accelerate the screen access speed, the screen is implemented with an one-dim
 \subsection{Keyboard (Read-only)}
 The input signals of the keyboard are PS2\_CLK and PS2\_DATA. With a keyboard signal processor, a byte of scan code can be generated when a key is pressed. The scan code is then stored in a circular buffer of 16 bytes. The buffer provides the CPU with a "new\_key" signal, which is high when the buffer is not empty. The CPU can read "new\_key" through the address 0x00300000. When the CPU reads the address 0x00300004, the buffer will pop a byte of scan code.
 
-The driver of the keyboard is implemented in the software part. Basically, the driver is a finite state machine (Figure \ref{fig:image1}), which can be divided into three states: KEY\_DOWN, KEY\_UP, LONG\_KEY\_DOWN, and LONG\_KEY\_UP. The "LONG\_" prefix in states refers to the two-bytes scan code which mainly start with 0xE0. The break code of a key is 0xF0 succeeded by its make code, thus the KEY\_UP and LONG\_KEY\_UP states are used to detect the break code.
+The driver of the keyboard is implemented in the software part. Basically, the driver is a finite state machine (Figure \ref{fig:image1}), which can be divided into 4 states: KEY\_DOWN, KEY\_UP, LONG\_KEY\_DOWN, and LONG\_KEY\_UP. The "LONG\_" prefix in states refers to the two-bytes scan code which mainly start with 0xE0. The break code of a key is 0xF0 succeeded by its make code, thus the KEY\_UP and LONG\_KEY\_UP states are used to detect the break code.
 
 The driver is implemented with a C function, which has only one state change every time it is called. There are three global values, "key\_ready", "two\_byte\_code" and "key\_up", which are signals for applications and are set according to the state. When the state machine finds that it ends a key press, it sets "key\_ready" to 1, and returns (the lowest byte of) the scan code. Otherwise, it returns 0.
 
@@ -153,7 +178,9 @@ The terminal supports the following commands:
     \item \textbf{piano}: Run the Piano game.
 \end{itemize}
 \subsection{Snake}
+The snake game looks like the classic snake game on Nokia phones. The snake is a square, and the food is a circle. The snake can move in four directions, and it will die if it hits the wall or itself. The snake will grow longer when it eats food. The game ends when the snake dies. A pop-up window will appear, which shows "YOU LOSE" in ascii art and the score.
 
+There are 3 different levels in the game. The speed of the snake increases as the level increases. When the "snake" command is executed in the terminal, a pop-up window will appear, and the player can choose the level by pressing 1, 2, or 3. The game will start after the player chooses the level. The player can press "q" to quit the game and return to the terminal.
 \subsection{Piano}
-
+The piano game is just a simple piano. The player can press the keys: \`, 0-9, -, = and backspace to play. The shift (ctrl) key can increase (decrease) the pitch by one octave. The player can press "q" to quit the game and return to the terminal.
 \end{document}

@@ -1,5 +1,13 @@
+### Introduction
+
 This is the final project report of the course Digital Design and Computer
 Organization. You can just downlaod the pdf to read the report.
+
+### Template
+
+The template can be found at https://www.latextemplates.com/cat/laboratory-reports
+
+### Abstract
 
 In this project, I designed a simple RISC-V computer system on FPGA. The FPAG board
 is Digilent Nexys A7-100T. The compter system is composed of: a CPU, a data memory,
