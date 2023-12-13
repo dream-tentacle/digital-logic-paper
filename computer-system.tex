@@ -109,7 +109,7 @@ This stage not only reads and writes the memory, but also checks if there is a h
 \subsection*{Write back (WB)}
 This stage writes the result of ALU or the memory to the register file. Because the register file is written in the rising edge, the written value can be used in the ID stage of the same clock cycle, which is called forwarding.
 
-\subsection{Hazard detection}
+\subsection*{Hazard detection}
 There are three types of hazards: data hazard, control hazard and structural hazard. The structural hazard doesn't exist in this project because we don't use any hardware resource in two stages at the same time. The control hazard is solved by flushing the IF and ID stages, which we have already mentioned. The data hazard is solved by forwarding.
 
 There are three types of data hazard: RAW (read after write), WAR (write after read) and WAW (write after write). Only the RAW appears in this design. Again, there are three types of RAW: WB-ID, WB-EX, and MEM-EX. The WB-ID is mentioned in the WB stage introduction. To solve the WB-EX hazard
@@ -153,7 +153,7 @@ The resolution is 640x480, and the color depth is 12 bits. Because the system is
 
 To accelerate the screen access speed, the screen is implemented with an one-dimensional array instead of a two-dimensional array. Considering the line and column size, 11-7 bits of the address are used to represent the line number, and 6-0 bits are used to represent the column number($2^5=32,2^7=128$). The screen has a base address of 0x00200000, and is accessed with 0x00200000 + offset.
 \subsection{Keyboard (Read-only)}
-The input signals of the keyboard are PS2\_CLK and PS2\_DATA. With a keyboard signal processor, a byte of scan code can be generated when a key is pressed. The scan code is then stored in a circular buffer of 16 bytes. The buffer provides the CPU with a "new\_key" signal, which is high when the buffer is not empty. The CPU can read "new\_key" through the address 0x00300000. When the CPU reads the address 0x00300004, the buffer will pop a byte of scan code.
+The input signals of the keyboard are PS2\_CLK and PS2\_DATA. With a keyboard signal processor, every byte of scan code can be generated from a stream of PS2\_DATA. The scan code is then stored in a circular buffer of 16 bytes. The buffer provides the CPU with a "new\_key" signal, which is high when the buffer is not empty. The CPU can read "new\_key" through the address 0x00300000. When the CPU reads the address 0x00300004, the buffer will pop a byte of scan code.
 
 The driver of the keyboard is implemented in the software part. Basically, the driver is a finite state machine (Figure \ref{fig:image1}), which can be divided into 4 states: KEY\_DOWN, KEY\_UP, LONG\_KEY\_DOWN, and LONG\_KEY\_UP. The "LONG\_" prefix in states refers to the two-bytes scan code which mainly start with 0xE0. The break code of a key is 0xF0 succeeded by its make code, thus the KEY\_UP and LONG\_KEY\_UP states are used to detect the break code.
 
