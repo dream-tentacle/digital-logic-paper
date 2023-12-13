@@ -26,11 +26,12 @@
 \usepackage{caption, hyperref, listings, graphics, geometry}
 % \addbibresource{sample.bib} % Bibliography file (located in the same folder as the template)
 \geometry{left = 2.5cm, right = 2.5cm, top = 2.5cm, bottom = 2.5cm}
+\renewcommand{\abstractname}{\large Abstract\\}
 %----------------------------------------------------------------------------------------
 %	REPORT INFORMATION
 %----------------------------------------------------------------------------------------
 
-\title{A RISC-V computer system design} % Report title
+\title{A RISC-V computer system design\thanks{\textbf{The latest version can be found at} \url{https://github.com/dream-tentacle/digital-logic-paper}}}
 
 \author{Jun-Cheng Xiong} % Author name(s), add additional authors like: '\& James \textsc{Smith}'
 
@@ -54,10 +55,13 @@
 
 
 \begin{abstract}
-    In this project, I designed a simple RISC-V computer system on FPGA. The FPAG board is Digilent Nexys A7-100T. The compter system is composed of: a CPU, a data memory, an instruction memory, a vga screen, a keyboard, and a PWM audio output. The CPU is a 5-stage pipeline processor, which can execute 32-bit RISC-V instructions. The system interface is a terminal, which can execute basic commands and run two software - Snake and Piano.
+    \large{
+        In this project, a simple RISC-V computer system is implemented on Digilent Nexys A7-100T FPGA board. The compter system is composed of: a CPU, a data memory, an instruction memory, a vga screen, a keyboard, and a PWM audio output. The CPU is a 5-stage pipeline processor, which can execute 32-bit RISC-V instructions. The system interface is a terminal, which can execute basic commands and run two software - Snake and Piano.
 
-    \textbf{Keywords}: RISC-V, FPGA, 5-stage pipeline, computer system
+        \textbf{Keywords}: RISC-V, FPGA, 5-stage pipeline, computer system
+    }
 \end{abstract}
+\thispagestyle{empty}
 \newpage
 
 \thispagestyle{empty}
@@ -80,12 +84,35 @@ RISC-V is an open-source instruction set architecture (ISA) based on reduced ins
 \section{Hardware}
 
 \subsection{5-stage pipeline CPU}
+The 5-stage pipeline divides every instruction into 5 stages, and executes them in parallel, which can greatly improve the speed of the CPU. The 5 stages are: instruction fetch (IF), instruction decode (ID), execute (EX), memory access (MEM), and write back (WB). The pipeline is shown in Figure \ref{fig:image2}.
+
 \begin{figure}[htbp]
     \Scentering
     \includegraphics[width=.9\paperwidth]{image2.png}
     \caption{}
     \label{fig:image2}
 \end{figure}
+
+The cycle of clocks begins at the falling edge and ends at the next falling edge. The CPU clock is used in both the rising edge and the falling edge as follows. The regester file is written in the rising edge but read with logic assignment (thus output changes at any time). The instruction memory is read in the rising edge. The data memory (including other I/O devices) is read in the rising edge and written in the falling edge. The PC is updated in the falling edge. The pipeline registers are written and read in the falling edge.
+
+\subsection*{Instruction fetch (IF)}
+This stage fetches the instruction from the instruction memory. The PC is the program counter, which stores the address of the next instruction. Ususally, the PC is updated by adding 4 to itself, and this is calculated by a specialized add unit. At the end of the IF stage, the current PC and the instruction are stored in the pipeline register IF/ID.
+\subsection*{Instruction decode (ID)}
+This stage decodes the instruction and reads the register file. The register file has two read ports, which can read two registers at the same time. Other control signals are also generated in this stage. At the end of the ID stage, the PC, the regester information and the control signals are stored in the pipeline register ID/EX.
+
+\subsection*{Execute (EX)}
+This stage executes the calculation. According to the result of ALU and the control signals, a signal for branching is generated. If it is going to branch, the IF and ID stages will be flushed, and the PC will be changed. At the end of the EX stage, the PC, the result of ALU, the regester information and the control signals are stored in the pipeline register EX/MEM.
+
+\subsection*{Memory access (MEM)}
+This stage not only reads and writes the memory, but also checks if there is a hazard, which will be introduced later. At the end of the MEM stage, the PC, the result of ALU, the regester information and the control signals are stored in the pipeline register MEM/WB.
+
+\subsection*{Write back (WB)}
+This stage writes the result of ALU or the memory to the register file. Because the register file is written in the rising edge, the written value can be used in the ID stage of the same clock cycle, which is called forwarding.
+
+\subsection{Hazard detection}
+There are three types of hazards: data hazard, control hazard and structural hazard. The structural hazard doesn't exist in this project because we don't use any hardware resource in two stages at the same time. The control hazard is solved by flushing the IF and ID stages, which we have already mentioned. The data hazard is solved by forwarding.
+
+There are three types of data hazard: RAW (read after write), WAR (write after read) and WAW (write after write). Only the RAW appears in this design. Again, there are three types of RAW: WB-ID, WB-EX, and MEM-EX. The WB-ID is mentioned in the WB stage introduction. To solve the WB-EX hazard
 
 \subsection{Memory management}
 
