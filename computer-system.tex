@@ -153,13 +153,11 @@ The resolution is 640x480, and the color depth is 12 bits. Because the system is
 
 To accelerate the screen access speed, the screen is implemented with an one-dimensional array instead of a two-dimensional array. Considering the line and column size, 11-7 bits of the address are used to represent the line number, and 6-0 bits are used to represent the column number($2^5=32,2^7=128$). The screen has a base address of 0x00200000, and is accessed with 0x00200000 + offset.
 \subsection{Keyboard (Read-only)}
-The input signals of the keyboard are PS2\_CLK and PS2\_DATA. With a keyboard signal processor, every byte of scan code can be generated from a stream of PS2\_DATA. The scan code is then stored in a circular buffer of 16 bytes. The buffer provides the CPU with a "new\_key" signal, which is high when the buffer is not empty. The CPU can read "new\_key" through the address 0x00300000. When the CPU reads the address 0x00300004, the buffer will pop a byte of scan code.
+The input signals of the keyboard are PS2\_CLK and PS2\_DATA. With a keyboard signal processor, every byte of scan code can be generated from a stream of PS2\_DATA. The scan code is then stored in a circular buffer of 16 bytes. The buffer provides the CPU with a ``new\_key'' signal, which is high when the buffer is not empty. The CPU can read ``new\_key'' through the address 0x00300000. When the CPU reads the address 0x00300004, the buffer will pop a byte of scan code.
 
-The driver of the keyboard is implemented in the software part. Basically, the driver is a finite state machine (Figure \ref{fig:image1}), which can be divided into 4 states: KEY\_DOWN, KEY\_UP, LONG\_KEY\_DOWN, and LONG\_KEY\_UP. The "LONG\_" prefix in states refers to the two-bytes scan code which mainly start with 0xE0. The break code of a key is 0xF0 succeeded by its make code, thus the KEY\_UP and LONG\_KEY\_UP states are used to detect the break code.
+The driver of the keyboard is implemented in the software part. Basically, the driver is a finite state machine (Figure \ref{fig:image1}), which can be divided into 4 states: KEY\_DOWN, KEY\_UP, LONG\_KEY\_DOWN, and LONG\_KEY\_UP. The ``LONG\_'' prefix in states refers to the two-bytes scan code which mainly start with 0xE0. The break code of a key is 0xF0 succeeded by its make code, thus the KEY\_UP and LONG\_KEY\_UP states are used to detect the break code.
 
-The driver is implemented with a C function, which has only one state change every time it is called. There are three global values, "key\_ready", "two\_byte\_code" and "key\_up", which are signals for applications and are set according to the state. When the state machine finds that it ends a key press, it sets "key\_ready" to 1, and returns (the lowest byte of) the scan code. Otherwise, it returns 0.
-
-The other two-byte scan codes are not used in this project, so we just ignore them.
+The driver is implemented with a C function, which has only one state change every time it is called. There are three global values, ``key\_ready'', ``two\_byte\_code'' and ``key\_up'', which are signals for applications and are set according to the state. When the state machine finds that it ends a key press, it sets ``key\_ready'' to 1, and returns (the lowest byte of) the scan code. Otherwise, it returns 0. The other two-byte scan codes are not used in this project, so we just ignore them.
 
 \begin{figure}[!htb]
     \centering
@@ -169,6 +167,8 @@ The other two-byte scan codes are not used in this project, so we just ignore th
     \label{fig:image1}
 
 \end{figure}
+
+When a keycode is gotten, the software part will get the ascii code for it through an array. If the key is a signal key, it will be proceeded correspondingly.
 
 
 \subsection{PWM audio output (Write-only)}
@@ -185,13 +185,13 @@ The terminal is the interface between the user and the system. The function of t
 
 The terminal has different types of responses to different key presses:
 \begin{itemize}
-    \item \textbf{key up}: When the global variable "key\_up" is set to 1, the terminal checks if the key is "shift", "ctrl", or "alt". If so, it sets the corresponding global flag variable to 0. Otherwise, it does nothing.
-    \item \textbf{key down}: When the global variable "key\_up" is set to 0:
+    \item \textbf{key up}: When the global variable ``key\_up'' is set to 1, the terminal checks if the key is ``shift'', ``ctrl'', or ``alt''. If so, it sets the corresponding global flag variable to 0. Otherwise, it does nothing.
+    \item \textbf{key down}: When the global variable ``key\_up'' is set to 0:
           \begin{itemize}
-              \item \textbf{signal keys}: If the key is "shift", "ctrl", or "alt", the terminal sets the corresponding global flag variable to 1.
-              \item \textbf{backspace}: If the key is "backspace", the terminal deletes the last character in the buffer and put a space in the screen.
-              \item \textbf{enter}: If the key is "enter", the terminal executes the command in the buffer. If the command is not recognized, the terminal does nothing.
-              \item \textbf{caps lock}: If the key is "caps lock", the terminal toggles the "caps\_lock" global flag variable.
+              \item \textbf{signal keys}: If the key is ``shift'', ``ctrl'', or ``alt'', the terminal sets the corresponding global flag variable to 1.
+              \item \textbf{backspace}: If the key is ``backspace'', the terminal deletes the last character in the buffer and put a space in the screen.
+              \item \textbf{enter}: If the key is ``enter'', the terminal executes the command in the buffer. If the command is not recognized, the terminal does nothing.
+              \item \textbf{caps lock}: If the key is ``caps lock'', the terminal toggles the ``caps\_lock'' global flag variable.
           \end{itemize}
 \end{itemize}
 The terminal supports the following commands:
@@ -205,9 +205,9 @@ The terminal supports the following commands:
     \item \textbf{piano}: Run the Piano game.
 \end{itemize}
 \subsection{Snake}
-The snake game looks like the classic snake game on Nokia phones. The snake is a square, and the food is a circle. The snake can move in four directions, and it will die if it hits the wall or itself. The snake will grow longer when it eats food. The game ends when the snake dies. A pop-up window will appear, which shows "YOU LOSE" in ascii art and the score.
+The snake game looks like the classic snake game on Nokia phones. The snake is a square, and the food is a circle. The snake can move in four directions, and it will die if it hits the wall or itself. The snake will grow longer when it eats food. The game ends when the snake dies. A pop-up window will appear, which shows ``YOU LOSE'' in ascii art and the score.
 
-There are 3 different levels in the game. The speed of the snake increases as the level increases. When the "snake" command is executed in the terminal, a pop-up window will appear, and the player can choose the level by pressing 1, 2, or 3. The game will start after the player chooses the level. The player can press "q" to quit the game and return to the terminal.
+There are 3 different levels in the game. The speed of the snake increases as the level increases. When the ``snake'' command is executed in the terminal, a pop-up window will appear, and the player can choose the level by pressing 1, 2, or 3. The game will start after the player chooses the level. The player can press ``q'' to quit the game and return to the terminal.
 \subsection{Piano}
-The piano game is just a simple piano. The player can press the keys: \`, 0-9, -, = and backspace to play. The shift (ctrl) key can increase (decrease) the pitch by one octave. The player can press "q" to quit the game and return to the terminal.
+The piano game is just a simple piano. The player can press the keys: \`, 0-9, -, = and backspace to play. The shift (ctrl) key can increase (decrease) the pitch by one octave. The player can press ``q'' to quit the game and return to the terminal.
 \end{document}
