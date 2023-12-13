@@ -19,7 +19,7 @@
     morecomment=[l]{//},
 }
 
-\title{\textbf{A RISC-V computer system design} \\ \large{\textit{Latest version available at:} \url{http://www.yourhomepage.com}}}
+\title{\textbf{A RISC-V computer system design}\thanks{\textit{Latest version available at:} \url{https://github.com/dream-tentacle/digital-logic-paper}}}
 
 \author{Xiong Juncheng}
 \date{\today}
@@ -129,7 +129,31 @@ There are two memory addresses, 0x00500000 and 0x00500004, corresponding to the 
 
 \section{Software}
 \subsection{Terminal}
+The terminal is the interface between the user and the system. The function of the terminal calls the keyboard driver function only once every time it is called. If the keyboard driver returns 0, the terminal will return immediately. Otherwise, the terminal will process the scan code and execute the corresponding command. When the system is turned on, it enters a while loop, which calls the terminal function without stopping.
+
+The terminal has different types of responses to different key presses:
+\begin{itemize}
+    \item \textbf{key up}: When the global variable "key\_up" is set to 1, the terminal checks if the key is "shift", "ctrl", or "alt". If so, it sets the corresponding global flag variable to 0. Otherwise, it does nothing.
+    \item \textbf{key down}: When the global variable "key\_up" is set to 0:
+          \begin{itemize}
+              \item \textbf{signal keys}: If the key is "shift", "ctrl", or "alt", the terminal sets the corresponding global flag variable to 1.
+              \item \textbf{backspace}: If the key is "backspace", the terminal deletes the last character in the buffer and put a space in the screen.
+              \item \textbf{enter}: If the key is "enter", the terminal executes the command in the buffer. If the command is not recognized, the terminal does nothing.
+              \item \textbf{caps lock}: If the key is "caps lock", the terminal toggles the "caps\_lock" global flag variable.
+          \end{itemize}
+\end{itemize}
+The terminal supports the following commands:
+\begin{itemize}
+    \item \textbf{help}: Print the help message.
+    \item \textbf{clear}: Clear the screen.
+    \item \textbf{fib n}: Print the first n Fibonacci numbers.
+    \item \textbf{sort n ...}: Sort the following n numbers.
+    \item \textbf{prime n}: Print all prime numbers less than n (using Euler's sieve).
+    \item \textbf{snake}: Run the Snake game.
+    \item \textbf{piano}: Run the Piano game.
+\end{itemize}
 \subsection{Snake}
+
 \subsection{Piano}
 
 \end{document}
