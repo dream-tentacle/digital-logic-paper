@@ -66,6 +66,14 @@
 
 \thispagestyle{empty}
 \tableofcontents
+\quad
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=12cm]{image7.png}
+    \caption{Digilent Nexys A7-100T FPGA board}
+    \label{fig:image7}
+\end{figure}
+
 
 \newpage
 \setcounter{page}{1}
@@ -109,10 +117,10 @@ This stage not only reads and writes the memory, but also checks if there is a h
 \subsection*{Write back (WB)}
 This stage writes the result of ALU or the memory to the register file. Because the register file is written in the rising edge, the written value can be used in the ID stage of the same clock cycle, which is called forwarding.
 
-\subsection*{Hazard detection}
+\subsection*{Hazard solution}
 There are three types of hazards: data hazard, control hazard and structural hazard. The structural hazard doesn't exist in this project because we don't use any hardware resource in two stages at the same time. The control hazard is solved by flushing the IF and ID stages, which we have already mentioned. The data hazard is solved by forwarding.
 
-There are three types of data hazard: RAW (read after write), WAR (write after read) and WAW (write after write). Only the RAW appears in this design. Again, there are three types of RAW: WB-ID, WB-EX, and MEM-EX. The WB-ID is mentioned in the WB stage introduction. To solve the WB-EX hazard
+There are three types of data hazard: RAW (read after write), WAR (write after read) and WAW (write after write). Only the RAW appears in this design. Again, there are three types of RAW: WB-ID, WB-EX, and MEM-EX. The WB-ID is mentioned in the WB stage introduction. To solve the WB-EX hazard, we use a forwarding unit to forward the result of ALU or the memory to the EX stage. The forwarding unit checks whether one of the register data in the EX comes from the writing register. If so, the forwarding unit will change the data to the writing data. The MEM-EX hazard is also solved by the forwarding unit. The forwarding unit checks whether one of the register data in the EX comes from the writing register and the instruction is a load instruction that reads the memory and writes the register. If so, the forwarding unit will change the data to the writing data.
 
 \subsection{Memory management}
 
@@ -177,7 +185,7 @@ The audio pitch is based on the frequency of the PWM signal. There is a count va
 The audio has two memory addresses, 0x00800000 and 0x00800004. The first address is used to set the max value, and the second address is used to turn on/off the audio.
 
 \subsection{Timer (Read-only)}
-There are two memory addresses, 0x00500000 and 0x00500004, corresponding to the millisecond counter and the second counter. Two extra counters are used for the timer. The first is a clock cycle counter that is set back to 0 when it exceeds $10^5$, and then both the second counter and the millisecond counter add 1. The second counter is set back to 0 when it exceeds 1000, and then the second counter adds 1. This implementation of four counters can largely reduce the complexity of the calculation because it doesn't use any division or multiplication.
+There are two memory addresses, 0x00500000 and 0x00500004, corresponding to the millisecond counter and the second counter. Four counters are used in the timer component: clock counter, millisecond counter 1, millisecond counter 2, and second counter. The clock frequency is 100MHz. When the clock counter reaches $10^5$, both the millisecond counters are increased by 1, and the clock counter is set back to 0. When the millisecond counter 1 reaches 1000, the second counter is increased by 1, and the millisecond counter 1 is set back to 0. The address 0x00500000 is used to read the millisecond counter 2, and the address 0x00500004 is used to read the second counter.
 
 \section{Software}
 \subsection{Terminal}
@@ -205,9 +213,42 @@ The terminal supports the following commands:
     \item \textbf{piano}: Run the Piano game.
 \end{itemize}
 \subsection{Snake}
-The snake game looks like the classic snake game on Nokia phones. The snake is a square, and the food is a circle. The snake can move in four directions, and it will die if it hits the wall or itself. The snake will grow longer when it eats food. The game ends when the snake dies. A pop-up window will appear, which shows ``YOU LOSE'' in ascii art and the score.
+The snake game looks like the classic snake game on Nokia phones. The snake can move in four directions, and it will die if it hits the wall or itself. The snake will grow longer when it eats food.
 
-There are 3 different levels in the game. The speed of the snake increases as the level increases. When the ``snake'' command is executed in the terminal, a pop-up window will appear, and the player can choose the level by pressing 1, 2, or 3. The game will start after the player chooses the level. The player can press ``q'' to quit the game and return to the terminal.
+There are 3 different levels in the game. The speed of the snake increases as the level increases. When the ``snake'' command is executed in the terminal, a pop-up window will appear (Figure \ref{fig:image3}), and the player can choose the level by pressing 1, 2, or 3. The game will start after the player chooses the level. The player can press ``q'' to quit the game and return to the terminal.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=12cm]{image3.png}
+    \captionof{figure}{Snake game level selection}
+    \label{fig:image3}
+\end{figure}
+The game looks like Figure \ref{fig:image4}. The snake is composed of squares, and the food is a circle. The score is shown in the top left corner. The player can press ``w'', ``a'', ``s'', ``d'' to control the snake. The player can press ``q'' to quit the game and return to the terminal. When the game ends, a pop-up window will appear, reads ``YOU LOSE'' in ascii art and the score (Figure \ref{fig:image5}).
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=12cm]{image4.png}
+    \captionof{figure}{Snake game}
+    \label{fig:image4}
+\end{figure}
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=12cm]{image5.png}
+    \captionof{figure}{Snake game over}
+    \label{fig:image5}
+\end{figure}
+
 \subsection{Piano}
 The piano game is just a simple piano. The player can press the keys: \`, 0-9, -, = and backspace to play. The shift (ctrl) key can increase (decrease) the pitch by one octave. The player can press ``q'' to quit the game and return to the terminal.
+
+The game looks like Figure \ref{fig:image6}. The numbers under the piano keys tell the player how to play the piano. The player can press ``q'' to quit the game and return to the terminal.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=12cm]{image6.png}
+    \captionof{figure}{Piano game}
+    \label{fig:image6}
+\end{figure}
+
 \end{document}
