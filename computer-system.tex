@@ -24,6 +24,7 @@
 	11pt, % Default font size, specify 10pt, 11pt or 12pt
 ]{CSUniSchoolLabReport}
 \usepackage{caption, hyperref, listings, graphics, geometry}
+\usepackage{xcolor}      %代码着色宏包
 % \addbibresource{sample.bib} % Bibliography file (located in the same folder as the template)
 \geometry{left = 2.5cm, right = 2.5cm, top = 2.5cm, bottom = 2.5cm}
 \renewcommand{\abstractname}{\large Abstract\\}
@@ -46,6 +47,29 @@
 \ifdim\Lmargin>\Rmargin \Rmargin=\Lmargin \fi
 \def\Scentering{\leftskip=0pt plus 1fil minus \Rmargin
                 \rightskip=\leftskip}
+
+%----------------------------------------------------------------------------------------
+
+
+\lstset{
+    basicstyle=\tt,
+    numbers=left,
+    rulesepcolor=\color{red!20!green!20!blue!20},
+    escapeinside=``,
+    xleftmargin=2em,xrightmargin=2em, aboveskip=1em,
+    %background
+    framexleftmargin=1.5mm,
+    frame=shadowbox,
+    backgroundcolor=\color[RGB]{245,245,244},
+    %style
+    keywordstyle=\color{blue}\bfseries,
+    identifierstyle=\bf,
+    numberstyle=\color[RGB]{0,192,192},
+    commentstyle=\it\color[RGB]{96,96,96},
+    stringstyle=\rmfamily\slshape\color[RGB]{128,0,0},
+    %space
+    showstringspaces=false
+}
 
 %----------------------------------------------------------------------------------------
 
@@ -80,9 +104,9 @@
 \section{Introduction}
 \subsection{Overall introduction}
 
-In the realm of digital systems design, the creation of a fully functional computer system on a Field-Programmable Gate Array (FPGA) stands as a testament to the designer's knowledge of digital systems. This project centers around the development of a simple yet robust RISC-V computer system, implemented on the Digilent Nexys A7-100T FPGA board. At the heart of this project lies the CPU, which is a 5-stage pipeline processor that can execute 32-bit RISC-V instructions. The computer system designed for this project includes essential components such as a CPU, a data memory, an instruction memory, a VGA screen, a keyboard, and a PWM audio output. The user interacts with the system through a terminal, which supports several commands and can run two software - Snake and Piano.
+In the realm of digital systems design, the creation of a fully functional computer system on a Field-Programmable Gate Array (FPGA) stands as a testament to the designer's knowledge of digital systems. This project centers around the development of a simple yet robust RISC-V computer system, implemented on the Digilent Nexys A7-100T FPGA board. At the heart of this project lies the CPU, which is a 5-stage pipeline processor that can execute 32-bit RISC-V instructions. The computer system designed for this project includes essential components such as a CPU, a data memory, an instruction memory, a VGA screen, a keyboard, and a PWM audio output. The user interacts with the system through a terminal, which supports several commands and can run three software - Snake, Piano, and Conway's Game of Life.
 
-This report is divided into two parts. The first segment delves into the hardware design, concentrating on the intricacies of the 5-stage pipeline CPU, memory management, and all other devices. The second part shifts focus to the software design, encompassing the implementation of the terminal, the engaging Snake game, and the musical pursuit in the form of the Piano game.
+This report is divided into two parts. The first segment delves into the hardware design, concentrating on the intricacies of the 5-stage pipeline CPU, memory management, and all other devices. The second part shifts focus to the software design, encompassing the implementation of the terminal, the engaging Snake game, the simple yet functional Piano game, and the Conway's Game of Life.
 
 \subsection{FPGA}
 The FPGA board for this project is Digilent Nexys A7-100T, a circuit design and implementation platform for classroom use. For more information, please refer to \url{https://digilent.com/reference/programmable-logic/nexys-a7/start}.
@@ -127,7 +151,7 @@ There are three types of data hazard: RAW (read after write), WAR (write after r
 The CPU uses byte addressing, and access all other devices through memory-mapped I/O. The memory address is 32 bits wide, and the first 12 bits are used to select the device. The address map is shown in Table \ref{tab:address-map}.
 \begin{table}[h]
     \Scentering
-    \begin{tabular}{|c|c|c|}
+    \begin{tabular}{|c|c|}
         \hline
         Address range           & Device             \\
         \hline
@@ -202,16 +226,34 @@ The terminal has different types of responses to different key presses:
               \item \textbf{caps lock}: If the key is ``caps lock'', the terminal toggles the ``caps\_lock'' global flag variable.
           \end{itemize}
 \end{itemize}
-The terminal supports the following commands:
-\begin{itemize}
-    \item \textbf{help}: Print the help message.
-    \item \textbf{clear}: Clear the screen.
-    \item \textbf{fib n}: Print the first n Fibonacci numbers.
-    \item \textbf{sort n ...}: Sort the following n numbers.
-    \item \textbf{prime n}: Print all prime numbers less than n (using Euler's sieve).
-    \item \textbf{snake}: Run the Snake game.
-    \item \textbf{piano}: Run the Piano game.
-\end{itemize}
+
+\subsection{Help}
+Typing ``help'' and enter gives you the usage of different commands (Figure \ref{fig:image8}).
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=12cm]{image8.png}
+    \captionof{figure}{Help}
+    \label{fig:image8}
+\end{figure}
+The simple commands as ``fib'', ``hello'' and ``sort'' is shown in Figure \ref{fig:image10}.
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=12cm]{image10.png}
+    \captionof{figure}{Simple commands}
+    \label{fig:image10}
+\end{figure}
+
+
+\subsection{Structural Hazard Test}
+The test command runs a program testing whether the control hazard is solved. There are 5 types of testing (code in Appendix). The result is shown in Figure \ref{fig:image9}.
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=12cm]{image9.png}
+    \captionof{figure}{Test result}
+    \label{fig:image9}
+\end{figure}
+
+
 \subsection{Snake}
 The snake game looks like the classic snake game on Nokia phones. The snake can move in four directions, and it will die if it hits the wall or itself. The snake will grow longer when it eats food.
 
@@ -219,7 +261,7 @@ There are 3 different levels in the game. The speed of the snake increases as th
 
 \begin{figure}[!htb]
     \centering
-    \includegraphics[width=12cm]{image3.png}
+    \includegraphics[width=8cm]{image3.png}
     \captionof{figure}{Snake game level selection}
     \label{fig:image3}
 \end{figure}
@@ -227,17 +269,26 @@ The game looks like Figure \ref{fig:image4}. The snake is composed of squares, a
 
 \begin{figure}[!htb]
     \centering
-    \includegraphics[width=12cm]{image4.png}
+    \includegraphics[width=8cm]{image4.png}
     \captionof{figure}{Snake game}
     \label{fig:image4}
 \end{figure}
 
 \begin{figure}[!htb]
     \centering
-    \includegraphics[width=12cm]{image5.png}
+    \includegraphics[width=8cm]{image5.png}
     \captionof{figure}{Snake game over}
     \label{fig:image5}
 \end{figure}
+
+When using the command ``gensnake'', a loading animation will appear (Figure \ref{fig:image11}).
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=8cm]{image11.png}
+    \captionof{figure}{Loading animation}
+    \label{fig:image11}
+\end{figure}
+
 
 \subsection{Piano}
 The piano game is just a simple piano. The player can press the keys: \`, 0-9, -, = and backspace to play. The shift (ctrl) key can increase (decrease) the pitch by one octave. The player can press ``q'' to quit the game and return to the terminal.
@@ -246,9 +297,86 @@ The game looks like Figure \ref{fig:image6}. The numbers under the piano keys te
 
 \begin{figure}[!htb]
     \centering
-    \includegraphics[width=12cm]{image6.png}
+    \includegraphics[width=8cm]{image6.png}
     \captionof{figure}{Piano game}
     \label{fig:image6}
 \end{figure}
 
+\subsection{Conway}
+The convey is the well-known experiment of Conway's Game of Life. The game implements the rules of Conway's Game of Life. The player can press ``q'' to quit the game and return to the terminal.
+
+Figure \ref{fig:image12} shows the game when it starts, and Figure \ref{fig:image13} shows the stable state of the game.
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=8cm]{image12.png}
+    \captionof{figure}{Conway's Game of Life}
+    \label{fig:image12}
+\end{figure}
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=8cm]{image13.png}
+    \captionof{figure}{Conway's Game of Life}
+    \label{fig:image13}
+\end{figure}
+
+
+\newpage
+\newpage
+\section{appendix}
+\subsection{test}
+\begin{lstlisting}[language=C]
+static __attribute__((noinline)) void fact1() {
+    volatile unsigned fact __attribute__((unused)) = 1;
+    for (unsigned i = 1; i < FACT_N; i++)
+    fact *= i;
+}
+__attribute__((noinline)) void fact2() {
+    volatile unsigned fact0 __attribute__((unused)) = 1;
+    volatile unsigned fact1 __attribute__((unused)) = 1;
+    volatile unsigned fact2 __attribute__((unused)) = 1;
+    volatile unsigned fact3 __attribute__((unused)) = 1;
+    for (unsigned i = 1; i < FACT_N; i += 4) {
+    fact0 *= i;
+    fact1 *= i + 1;
+    fact2 *= i + 2;
+    fact3 *= i + 3;
+    }
+}
+__attribute__((noinline)) void fact3() {
+    volatile unsigned fact __attribute__((unused)) = 1;
+    for (unsigned i = 1; i < FACT_N; i += 4) {
+    fact *= i;
+    fact *= i + 1;
+    fact *= i + 2;
+    fact *= i + 3;
+    }
+}
+static __attribute__((noinline)) void count1() {
+    int T = TIMES;
+    while (T--) {
+        for (int i = 0; i < SIZE; i++) {
+        value[i] = rand();
+        }
+        volatile int cnt __attribute__((unused)) = 0;
+        for (int i = 0; i < SIZE; i++)
+        if (value[i] > 500)
+            cnt++;
+    }
+}
+static __attribute__((noinline)) void count2() {
+    int T = TIMES;
+    while (T--) {
+        for (int i = 0; i < SIZE; i++) {
+        value[i] = i;
+        }
+        volatile int cnt __attribute__((unused)) = 0;
+        for (int i = 0; i < SIZE; i++)
+        if (value[i] > 500)
+            cnt++;
+    }
+}
+\end{lstlisting}
+
 \end{document}
+
